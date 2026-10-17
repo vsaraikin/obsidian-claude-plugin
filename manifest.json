@@ -1,7 +1,7 @@
 {
   "id": "margin-agent",
   "name": "Margin Agent",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "minAppVersion": "1.7.2",
   "description": "Chat with your local Claude Code agent in a sidebar, with streamed replies, tool calls, diffs, permission prompts, plan mode and session history.",
   "author": "Vladimir Saraikin",

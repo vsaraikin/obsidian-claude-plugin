@@ -1,90 +1,134 @@
-# Margin Agent
+<p align="center">
+  <img src="assets/icon.svg" width="96" alt="Margin Agent icon">
+</p>
 
-Margin Agent puts a Claude Code chat in the Obsidian sidebar. It runs the `claude` CLI you already have installed, with your vault as the working directory, and lays the conversation out like the Claude Code extension for VS Code: replies stream in as Markdown, each tool call gets its own row, edits show up as diffs, and Claude asks before it changes your notes.
+<h1 align="center">Margin Agent</h1>
 
-Margin Agent is an independent project. Anthropic did not make it and does not endorse or support it.
+<p align="center">
+  Claude Code in your Obsidian sidebar. It reads, searches and edits your notes, and asks before it changes anything.
+</p>
+
+<p align="center">
+  <a href="https://github.com/vsaraikin/obsidian-margin-agent/releases/latest"><img src="https://img.shields.io/github/v/release/vsaraikin/obsidian-margin-agent?color=d97757&label=release" alt="Latest release"></a>
+  <a href="https://github.com/vsaraikin/obsidian-margin-agent/releases"><img src="https://img.shields.io/github/downloads/vsaraikin/obsidian-margin-agent/total?color=7c3aed&label=downloads" alt="Downloads"></a>
+  <img src="https://img.shields.io/badge/Obsidian-1.7.2%2B-7c3aed?logo=obsidian&logoColor=white" alt="Obsidian 1.7.2 or later">
+  <img src="https://img.shields.io/badge/platform-desktop-555" alt="Desktop only">
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/vsaraikin/obsidian-margin-agent?color=2563eb" alt="MIT license"></a>
+</p>
+
+<p align="center">
+  <a href="#features">Features</a> ·
+  <a href="#installation">Installation</a> ·
+  <a href="#usage">Usage</a> ·
+  <a href="#settings">Settings</a> ·
+  <a href="#network-accounts-and-data">Privacy</a>
+</p>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/preview-dark.png">
+  <img src="assets/preview.png" alt="Margin Agent next to a note: Claude reads two notes, proposes an edit, and adds a Risks section">
+</picture>
+
+Margin Agent runs the `claude` CLI you already have, with your vault as the working directory. The panel is modeled on the Claude Code extension for VS Code: replies stream in, each tool call gets its own row, and edits arrive as diffs you approve.
+
+It is an independent project, not made or endorsed by Anthropic.
 
 ## Features
 
-- Replies stream as rendered Markdown. Summarized thinking appears as a collapsed block.
-- Every tool call is a row you can expand to see the file that was read, the search, or the shell command and its output. Edits open as a line diff with added and removed counts.
-- Before an edit or a command, a card asks for permission. You can allow it once, allow it for the rest of the session, decline, or type what Claude should do instead. Keys 1 to 3 choose an option.
-- The permission modes from Claude Code are available: ask before edits, edit automatically, plan mode and auto mode. Shift+Tab cycles through them. In plan mode you read and approve the plan before any edit happens.
-- When Claude asks a multiple-choice question, you answer it in the panel.
-- Each message tells Claude which note is open and includes the lines you selected. Click the note chip above the prompt to stop sharing it.
-- Typing `@` suggests notes to mention and `/` suggests commands, including your own commands and skills. Paste an image to attach it.
-- The history lists every Claude Code conversation for this vault, including ones you started in a terminal, and continues any of them. The last conversation reopens when Obsidian starts.
-- A counter under the prompt shows how much of the context window the conversation uses.
+**Readable tool calls.** Every file read, search and shell command is a row with its result one click away. Edits open as a line diff with added and removed counts.
+
+**You approve changes.** Before an edit or a command, Claude asks. Allow it once, allow it for the session, decline, or type what to do instead. Keys 1 to 3 pick an option.
+
+**Permission modes.** Ask before edits, edit automatically, plan mode and auto mode, switched with Shift+Tab. In plan mode you read the plan before a single file changes.
+
+**Your note as context.** Each message tells Claude which note is open and passes the lines you selected. Click the note chip to keep it private.
+
+**Mentions and commands.** `@` finds notes, `/` lists commands, including your own commands and skills. Paste an image to attach it.
+
+**History.** Every Claude Code conversation in the vault is listed, including ones you started in a terminal. Pick one to continue it. The last conversation reopens when Obsidian starts.
+
+<table>
+  <tr>
+    <td width="50%"><img src="assets/permission.png" alt="Permission card with the proposed diff"></td>
+    <td width="50%"><img src="assets/plan.png" alt="Plan mode: Claude's plan with approval options"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Approve an edit after reading the diff</sub></td>
+    <td align="center"><sub>Review the plan before Claude edits</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="assets/mentions.png" alt="Note suggestions after typing @"></td>
+    <td width="50%"><img src="assets/history.png" alt="Conversation history for the vault"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Mention notes with @</sub></td>
+    <td align="center"><sub>Continue any past conversation</sub></td>
+  </tr>
+</table>
 
 ## Requirements
 
-- Obsidian 1.7.2 or later on desktop. The plugin starts a local process, so it does not work on mobile. It has been tested on macOS only.
-- Claude Code installed and signed in. If `claude` works in your terminal, the plugin can use it.
+- Obsidian 1.7.2 or later, desktop only. Tested on macOS.
+- [Claude Code](https://code.claude.com/docs/en/overview) installed and signed in. If `claude` works in your terminal, the plugin can use it.
 
 ## Installation
 
-The plugin is not in the community directory yet. To install it by hand:
+The plugin is not in the community directory yet.
 
-1. Download `main.js`, `manifest.json` and `styles.css` from the [latest release](https://github.com/vsaraikin/obsidian-margin-agent/releases/latest).
-2. Copy them to `<your vault>/.obsidian/plugins/margin-agent/`.
-3. In Obsidian, open Settings, then Community plugins, and enable Margin Agent.
+**With BRAT.** Install [BRAT](https://github.com/TfTHacker/obsidian42-brat), run "BRAT: Add a beta plugin for testing" and enter `vsaraikin/obsidian-margin-agent`. BRAT keeps it updated.
 
-With the [BRAT](https://github.com/TfTHacker/obsidian42-brat) plugin you can add `vsaraikin/obsidian-margin-agent` instead and get updates automatically.
+**By hand.** Download `main.js`, `manifest.json` and `styles.css` from the [latest release](https://github.com/vsaraikin/obsidian-margin-agent/releases/latest), put them in `<vault>/.obsidian/plugins/margin-agent/`, then enable Margin Agent under Settings → Community plugins.
 
 ## Usage
 
-Open the panel with the ribbon icon or the command "Margin Agent: Open chat". The other commands are New conversation, Resume last conversation, Browse conversation history, and Mention current note in the prompt.
+Open the panel from the ribbon or with "Margin Agent: Open chat". Other commands: New conversation, Resume last conversation, Browse conversation history, Mention current note in the prompt.
 
 | Key | Action |
 | --- | --- |
-| Enter | Send the message |
+| Enter | Send |
 | Shift+Enter | New line |
-| Shift+Tab | Switch to the next permission mode |
+| Shift+Tab | Next permission mode |
 | Esc | Stop Claude |
-| Up arrow in an empty prompt | Bring back the previous message |
+| ↑ in an empty prompt | Previous message |
 | `@` | Mention a note |
-| `/` | Run a command. `/clear` starts a new conversation and `/resume` opens the history. |
+| `/` | Commands. `/clear` starts over, `/resume` opens the history |
 
 ## Settings
 
 | Setting | What it does |
 | --- | --- |
-| Claude Code executable | Path to the `claude` binary. Leave it empty to look it up on the PATH of your login shell. |
-| HTTPS proxy | Passed to Claude Code as `HTTPS_PROXY` and `HTTP_PROXY`. On first run it is copied from your shell if you have one set. |
-| Default model | The model a new conversation starts with. You can change it per conversation under the prompt. |
-| Default permission mode | The mode a new conversation starts in. |
-| Share the open note | Sends the open note's path and your selection with each message. |
-| Reopen last conversation | Continues the last conversation when Obsidian starts. |
-| Show thinking | Shows summarized reasoning as collapsed blocks. |
+| Claude Code executable | Path to `claude`. Empty means it is looked up on your login shell's PATH. |
+| HTTPS proxy | Passed to Claude Code as `HTTPS_PROXY` and `HTTP_PROXY`. Copied from your shell on first run. |
+| Default model | Model for new conversations. You can switch it under the prompt. |
+| Default permission mode | Mode for new conversations. |
+| Share the open note | Send the open note's path and selection with each message. |
+| Reopen last conversation | Continue the last conversation when Obsidian starts. |
+| Show thinking | Show summarized reasoning as collapsed blocks. |
 
 ## How it works
 
-The plugin uses the [Claude Agent SDK](https://code.claude.com/docs/en/agent-sdk/overview) to start your installed `claude` binary and keeps one process running per conversation. Your CLAUDE.md files, settings, skills and MCP servers apply the same way they do in a terminal.
-
-On macOS, Obsidian starts from the Dock and does not see your shell configuration. The plugin therefore runs your login shell once and reads `PATH` and any proxy variables from it.
-
-Conversation history comes from the session files Claude Code keeps in `~/.claude/projects`, the same files `claude --resume` reads.
+The plugin starts your installed `claude` binary through the [Claude Agent SDK](https://code.claude.com/docs/en/agent-sdk/overview) and keeps one process per conversation, so your CLAUDE.md, settings, skills and MCP servers apply as they do in a terminal. Obsidian started from the Dock does not see your shell configuration, so the plugin reads `PATH` and proxy variables from your login shell once. History comes from the session files in `~/.claude/projects` that `claude --resume` also reads.
 
 ## Network, accounts and data
 
-The plugin makes no network requests of its own and has no telemetry. Claude Code, which the plugin starts, sends your prompts to Anthropic's API, or to the provider you configured in Claude Code. That includes the open note's path, the text you selected, and any files or command output Claude reads while it works.
+The plugin makes no network requests of its own and has no telemetry. Claude Code sends your prompts to Anthropic's API, or to the provider you set up in Claude Code. That includes the open note's path, the selected text, and whatever files and command output Claude reads while working.
 
-You need a Claude account or an Anthropic API key, set up in Claude Code itself. Anthropic bills your usage under your own plan. The plugin never sees or stores your credentials. Anthropic asks third-party tools built on the Agent SDK to use API key authentication, so read their [legal and compliance page](https://code.claude.com/docs/en/legal-and-compliance) before you use a subscription login with this plugin.
+You need a Claude account or an Anthropic API key, configured in Claude Code. Usage is billed by Anthropic under your own plan, and the plugin never sees your credentials. Anthropic asks third-party tools built on the Agent SDK to use API key authentication; see their [legal and compliance page](https://code.claude.com/docs/en/legal-and-compliance) before using a subscription login here.
 
-The plugin reads files outside your vault in two places: Claude Code's session files in `~/.claude/projects`, to list and restore conversations, and your login shell's environment, once at startup. Claude Code works in the vault folder, but its tools can reach other paths. It follows your Claude Code permission settings and asks in the panel before edits and most commands.
+Outside the vault, the plugin reads Claude Code's session files in `~/.claude/projects` and your login shell's environment. Claude Code itself works in the vault folder, but its tools can reach other paths; it follows your Claude Code permission settings and asks in the panel before edits and most commands.
 
-## Building from source
+## Development
 
 ```sh
 npm install
 npm run build                                # type check and bundle into dist/
-OBSIDIAN_VAULT="/path/to/vault" npm run dev  # rebuild on change and copy into the vault
+OBSIDIAN_VAULT="/path/to/vault" npm run dev  # rebuild on change and copy into a vault
 npm run test:view                            # render the panel in a simulated DOM
-npm run smoke -- /tmp/some-empty-folder      # one real Claude Code turn; it creates hello.md there
+npm run smoke -- /tmp/empty-folder           # one real Claude Code turn, creates hello.md there
 ```
 
-`npm run smoke` runs a real conversation, so it counts against your Claude usage.
+Releases are built by GitHub Actions when a tag matching the version in `manifest.json` is pushed.
 
 ## License
 
-The plugin's source code is released under the MIT license. The released `main.js` also contains the Claude Agent SDK, which belongs to Anthropic PBC and is covered by Anthropic's terms, not by the MIT license.
+MIT for the plugin's source code. The released `main.js` also contains the Claude Agent SDK, which belongs to Anthropic PBC and is covered by Anthropic's terms.

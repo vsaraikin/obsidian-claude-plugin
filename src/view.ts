@@ -29,6 +29,7 @@ import { buildEnv, findClaude, loadShellEnv } from "./env";
 import { ClaudeSession, type UserContent } from "./session";
 import {
   EDIT_TOOLS,
+  HIDDEN_TOOLS,
   diffStats,
   formatDuration,
   relativeTime,
@@ -70,6 +71,7 @@ const STARTERS = [
 const SYSTEM_APPEND = [
   "You are running inside Obsidian as a chat panel next to the user's notes.",
   "The working directory is the user's Obsidian vault. Notes are Markdown files; refer to them by vault-relative path.",
+  "Work inside this vault. Do not read or change other folders on the computer unless the user asks for it.",
   "Keep Obsidian syntax intact when editing: [[wikilinks]], embeds, frontmatter properties, callouts and tags.",
   "Messages may include an <obsidian_context> block with the open note, the selected lines and notes the user mentioned with @.",
 ].join("\n");
@@ -202,7 +204,9 @@ export class ChatView extends ItemView {
 
   async onOpen() {
     this.build();
-    this.trackEditor(this.app.workspace.getActiveViewOfType(MarkdownView));
+    // Opening the panel makes it the active leaf, so fall back to the note last used in the main area.
+    const recent = this.app.workspace.getMostRecentLeaf(this.app.workspace.rootSplit)?.view;
+    this.trackEditor(this.app.workspace.getActiveViewOfType(MarkdownView) ?? (recent instanceof MarkdownView ? recent : null));
     this.registerEvent(
       this.app.workspace.on("active-leaf-change", (leaf) => {
         if (leaf?.view instanceof MarkdownView) this.trackEditor(leaf.view);
@@ -253,7 +257,7 @@ export class ChatView extends ItemView {
     this.uiChips = box.createDiv({ cls: "cc-chips" });
     this.uiInput = box.createEl("textarea", {
       cls: "cc-input",
-      attr: { rows: "1", placeholder: "Ask Claude to edit, research or plan…  @ to mention a note" },
+      attr: { rows: "1", placeholder: "Ask Claude to edit, research or plan" },
     });
     const footer = box.createDiv({ cls: "cc-footer" });
     const left = footer.createDiv({ cls: "cc-footer-left" });
@@ -524,7 +528,8 @@ export class ChatView extends ItemView {
       tv.metaEl.createSpan({ cls: "cc-add", text: `+${added}` });
       tv.metaEl.createSpan({ cls: "cc-del", text: `−${removed}` });
       renderDiff(body, diff);
-      if (!tv.item.hasClass("was-toggled")) tv.item.addClass("is-open");
+      // While the permission card shows this diff, keep the row closed so the diff is not shown twice.
+      if (tv.done && !tv.error) tv.item.addClass("is-open");
     } else if (name === "TodoWrite" && Array.isArray(input.todos)) {
       renderTodos(body, input.todos as Todo[]);
       this.updatePinnedTodos(input.todos as Todo[]);
@@ -631,7 +636,7 @@ export class ChatView extends ItemView {
         const cb = ev.content_block;
         if (cb.type === "text") this.startText(key);
         else if (cb.type === "thinking" && this.plugin.settings.showThinking) this.startThinking(key);
-        else if (cb.type === "tool_use") this.toolView(cb.id, cb.name, {});
+        else if (cb.type === "tool_use" && !HIDDEN_TOOLS.has(cb.name)) this.toolView(cb.id, cb.name, {});
         break;
       }
       case "content_block_delta":
@@ -665,7 +670,7 @@ export class ChatView extends ItemView {
     if (m.parent_tool_use_id) {
       const parent = this.tools.get(m.parent_tool_use_id);
       if (!parent) return;
-      for (const b of msg.content) if (b.type === "tool_use") this.toolView(b.id, b.name, b.input ?? {}, parent.children);
+      for (const b of msg.content) if (b.type === "tool_use" && !HIDDEN_TOOLS.has(b.name)) this.toolView(b.id, b.name, b.input ?? {}, parent.children);
       parent.item.addClass("has-body");
       return;
     }
@@ -677,7 +682,7 @@ export class ChatView extends ItemView {
         this.finishText(key, b.text);
       } else if (b.type === "thinking" && !streamed && this.plugin.settings.showThinking && b.thinking?.trim()) {
         this.startThinking(key, b.thinking);
-      } else if (b.type === "tool_use") {
+      } else if (b.type === "tool_use" && !HIDDEN_TOOLS.has(b.name)) {
         this.toolView(b.id, b.name, b.input ?? {});
       }
     });
@@ -1089,7 +1094,7 @@ export class ChatView extends ItemView {
     const parts: string[] = [];
     const view = this.lastMarkdown;
     if (this.noteEnabled && this.plugin.settings.includeActiveNote && view?.file) {
-      parts.push(`The user has the note "${view.file.path}" open in Obsidian.`);
+      parts.push(`The user has the note "${view.file.path}" open in Obsidian. Paths are relative to the vault root ${this.vaultPath}.`);
       const editor = view.editor;
       if (editor.somethingSelected()) {
         const from = editor.getCursor("from").line + 1;
@@ -1098,7 +1103,7 @@ export class ChatView extends ItemView {
       }
     }
     const mentions = this.resolveMentions(text);
-    if (mentions.length) parts.push(`Notes the user mentioned with @ (vault-relative paths): ${mentions.join(", ")}`);
+    if (mentions.length) parts.push(`Notes the user mentioned with @ (relative to ${this.vaultPath}): ${mentions.join(", ")}`);
     return parts.length ? `<obsidian_context>\n${parts.join("\n\n")}\n</obsidian_context>` : "";
   }
 
@@ -1413,7 +1418,7 @@ export class ChatView extends ItemView {
         const row = list.createDiv({ cls: `cc-history-item${s.sessionId === current ? " is-current" : ""}` });
         const title = sessionTitle(s);
         row.createDiv({ cls: "cc-history-title", text: title });
-        row.createDiv({ cls: "cc-history-meta", text: [relativeTime(s.lastModified), s.gitBranch].filter(Boolean).join(" · ") });
+        row.createDiv({ cls: "cc-history-meta", text: [relativeTime(s.lastModified), s.gitBranch !== "HEAD" ? s.gitBranch : ""].filter(Boolean).join(" · ") });
         row.onclick = () => {
           el.addClass("is-hidden");
           void this.openSession(s.sessionId, title);

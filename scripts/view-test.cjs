@@ -48,7 +48,7 @@ Module._load = function (req, ...rest) { return req === "obsidian" ? obsidian : 
 const { ChatView } = require(require("path").resolve(process.argv[2]));
 const app = {
   vault: { adapter: new obsidian.FileSystemAdapter(), getFiles: () => [], getAbstractFileByPath: () => null },
-  workspace: { getActiveViewOfType: () => null, on: () => ({}), getLastOpenFiles: () => [] },
+  workspace: { getActiveViewOfType: () => null, getMostRecentLeaf: () => null, rootSplit: {}, on: () => ({}), getLastOpenFiles: () => [] },
   metadataCache: { getFirstLinkpathDest: () => null },
 };
 const plugin = {

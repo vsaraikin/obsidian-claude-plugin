@@ -1,6 +1,6 @@
 {
   "name": "obsidian-margin-agent",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Obsidian sidebar chat for a local Claude Code agent",
   "scripts": {
     "dev": "node esbuild.config.mjs",

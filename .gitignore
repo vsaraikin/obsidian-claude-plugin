@@ -3,3 +3,4 @@ dist/
 main.js
 *.log
 .DS_Store
+.shots/

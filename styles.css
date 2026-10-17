@@ -1052,6 +1052,11 @@
   width: 15px;
   height: 15px;
   stroke-width: 2.5px;
+  color: #fff;
+}
+
+.cc-send.is-stop svg {
+  color: var(--background-primary);
 }
 
 .cc-send:disabled {
@@ -1145,6 +1150,11 @@
 .cc-recent-head .cc-link-btn {
   margin-top: 0;
   font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.cc-recent-head .cc-link-btn:hover {
+  color: var(--text-normal);
 }
 
 .cc-recent-item {
@@ -1179,3 +1189,17 @@
   font-size: 11px;
   color: var(--text-faint);
 }
+
+/* Headings inside chat messages and plans stay close to body size. */
+.cc-md h1 { font-size: 1.3em; }
+.cc-md h2 { font-size: 1.15em; }
+.cc-md h3 { font-size: 1.05em; }
+.cc-md h4,
+.cc-md h5,
+.cc-md h6 { font-size: 1em; }
+.cc-md h1,
+.cc-md h2,
+.cc-md h3,
+.cc-md h4,
+.cc-md h5,
+.cc-md h6 { margin: 0.8em 0 0.3em; line-height: 1.3; }

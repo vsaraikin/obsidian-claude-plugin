@@ -1,3 +1,5 @@
+import { homedir } from "os";
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Input = Record<string, any>;
 
@@ -10,10 +12,15 @@ export interface ToolSummary {
 
 export const EDIT_TOOLS = new Set(["Edit", "MultiEdit", "Write", "NotebookEdit"]);
 
+/** Claude Code internals that mean nothing to the reader. */
+export const HIDDEN_TOOLS = new Set(["ToolSearch"]);
+
 export function relPath(path: string, base: string): string {
   if (!path) return "";
   if (path === base) return ".";
-  return path.startsWith(base + "/") ? path.slice(base.length + 1) : path;
+  if (path.startsWith(base + "/")) return path.slice(base.length + 1);
+  const home = homedir();
+  return path.startsWith(home + "/") ? `~${path.slice(home.length)}` : path;
 }
 
 const str = (v: unknown): string => (typeof v === "string" ? v : "");
