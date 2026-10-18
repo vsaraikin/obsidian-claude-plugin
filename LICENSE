@@ -19,8 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
-This license covers the plugin's own source code. The released main.js also
-bundles the Claude Agent SDK (@anthropic-ai/claude-agent-sdk), which is
-(c) Anthropic PBC and is not covered by this license. Its use is subject to
-Anthropic's terms: https://code.claude.com/docs/en/legal-and-compliance
