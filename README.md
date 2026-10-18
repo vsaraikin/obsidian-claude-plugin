@@ -11,7 +11,7 @@
 <p align="center">
   <a href="https://github.com/vsaraikin/obsidian-claude-plugin/releases/latest"><img src="https://img.shields.io/github/v/release/vsaraikin/obsidian-claude-plugin?color=d97757&label=release" alt="Latest release"></a>
   <a href="https://github.com/vsaraikin/obsidian-claude-plugin/releases"><img src="https://img.shields.io/github/downloads/vsaraikin/obsidian-claude-plugin/total?color=7c3aed&label=downloads" alt="Downloads"></a>
-  <img src="https://img.shields.io/badge/Obsidian-1.7.2%2B-7c3aed?logo=obsidian&logoColor=white" alt="Obsidian 1.7.2 or later">
+  <a href="https://community.obsidian.md/plugins/agent-sidebar"><img src="https://img.shields.io/badge/Obsidian-1.7.2%2B-7c3aed?logo=obsidian&logoColor=white" alt="Obsidian 1.7.2 or later"></a>
   <img src="https://img.shields.io/badge/platform-desktop-555" alt="Desktop only">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT license"></a>
 </p>
@@ -72,7 +72,7 @@ It is an independent project, not made or endorsed by Anthropic.
 
 ## Installation
 
-The plugin is not in the community directory yet.
+Agent Sidebar is [listed in the Obsidian community directory](https://community.obsidian.md/plugins/agent-sidebar) and waiting for review. Once it is approved, install it from Settings → Community plugins → Browse. Until then, use BRAT or install it by hand.
 
 **With BRAT.** Install [BRAT](https://github.com/TfTHacker/obsidian42-brat), run "BRAT: Add a beta plugin for testing" and enter `vsaraikin/obsidian-claude-plugin`. BRAT keeps it updated.
 
