@@ -9,11 +9,11 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/vsaraikin/obsidian-margin-agent/releases/latest"><img src="https://img.shields.io/github/v/release/vsaraikin/obsidian-margin-agent?color=d97757&label=release" alt="Latest release"></a>
-  <a href="https://github.com/vsaraikin/obsidian-margin-agent/releases"><img src="https://img.shields.io/github/downloads/vsaraikin/obsidian-margin-agent/total?color=7c3aed&label=downloads" alt="Downloads"></a>
+  <a href="https://github.com/vsaraikin/obsidian-claude-plugin/releases/latest"><img src="https://img.shields.io/github/v/release/vsaraikin/obsidian-claude-plugin?color=d97757&label=release" alt="Latest release"></a>
+  <a href="https://github.com/vsaraikin/obsidian-claude-plugin/releases"><img src="https://img.shields.io/github/downloads/vsaraikin/obsidian-claude-plugin/total?color=7c3aed&label=downloads" alt="Downloads"></a>
   <img src="https://img.shields.io/badge/Obsidian-1.7.2%2B-7c3aed?logo=obsidian&logoColor=white" alt="Obsidian 1.7.2 or later">
   <img src="https://img.shields.io/badge/platform-desktop-555" alt="Desktop only">
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/vsaraikin/obsidian-margin-agent?color=2563eb" alt="MIT license"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/vsaraikin/obsidian-claude-plugin?color=2563eb" alt="MIT license"></a>
 </p>
 
 <p align="center">
@@ -75,9 +75,9 @@ It is an independent project, not made or endorsed by Anthropic.
 
 The plugin is not in the community directory yet.
 
-**With BRAT.** Install [BRAT](https://github.com/TfTHacker/obsidian42-brat), run "BRAT: Add a beta plugin for testing" and enter `vsaraikin/obsidian-margin-agent`. BRAT keeps it updated.
+**With BRAT.** Install [BRAT](https://github.com/TfTHacker/obsidian42-brat), run "BRAT: Add a beta plugin for testing" and enter `vsaraikin/obsidian-claude-plugin`. BRAT keeps it updated.
 
-**By hand.** Download `main.js`, `manifest.json` and `styles.css` from the [latest release](https://github.com/vsaraikin/obsidian-margin-agent/releases/latest), put them in `<vault>/.obsidian/plugins/margin-agent/`, then enable Margin Agent under Settings → Community plugins.
+**By hand.** Download `main.js`, `manifest.json` and `styles.css` from the [latest release](https://github.com/vsaraikin/obsidian-claude-plugin/releases/latest), put them in `<vault>/.obsidian/plugins/margin-agent/`, then enable Margin Agent under Settings → Community plugins.
 
 ## Usage
 

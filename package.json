@@ -1,5 +1,5 @@
 {
-  "name": "obsidian-margin-agent",
+  "name": "obsidian-claude-plugin",
   "version": "0.1.1",
   "description": "Obsidian sidebar chat for a local Claude Code agent",
   "scripts": {
@@ -26,6 +26,6 @@
   "private": true,
   "repository": {
     "type": "git",
-    "url": "https://github.com/vsaraikin/obsidian-margin-agent.git"
+    "url": "https://github.com/vsaraikin/obsidian-claude-plugin.git"
   }
 }
