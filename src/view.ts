@@ -24,7 +24,7 @@ import {
   type SDKMessage,
   type SDKSessionInfo,
 } from "@anthropic-ai/claude-agent-sdk";
-import type MarginAgentPlugin from "./main";
+import type AgentSidebarPlugin from "./main";
 import { buildEnv, findClaude, loadShellEnv } from "./env";
 import { ClaudeSession, type UserContent } from "./session";
 import {
@@ -42,7 +42,7 @@ import {
   type Todo,
 } from "./render";
 
-export const VIEW_TYPE = "margin-agent-chat";
+export const VIEW_TYPE = "agent-sidebar-chat";
 
 const MODES: { id: PermissionMode; label: string; icon: string }[] = [
   { id: "default", label: "Ask before edits", icon: "hand" },
@@ -178,7 +178,7 @@ export class ChatView extends ItemView {
   private uiCtx!: HTMLElement;
   private uiSend!: HTMLButtonElement;
 
-  constructor(leaf: WorkspaceLeaf, private plugin: MarginAgentPlugin) {
+  constructor(leaf: WorkspaceLeaf, private plugin: AgentSidebarPlugin) {
     super(leaf);
     this.mode = plugin.settings.permissionMode;
     this.model = plugin.settings.model;
@@ -190,11 +190,11 @@ export class ChatView extends ItemView {
   }
 
   getDisplayText() {
-    return "Margin Agent";
+    return "Agent Sidebar";
   }
 
   getIcon() {
-    return "margin-agent";
+    return "agent-sidebar";
   }
 
   private get vaultPath(): string {
@@ -237,8 +237,8 @@ export class ChatView extends ItemView {
 
     const header = root.createDiv({ cls: "cc-header" });
     const brand = header.createDiv({ cls: "cc-brand" });
-    setIcon(brand.createSpan({ cls: "cc-logo" }), "margin-agent");
-    this.uiTitle = brand.createSpan({ cls: "cc-title", text: "Margin Agent" });
+    setIcon(brand.createSpan({ cls: "cc-logo" }), "agent-sidebar");
+    this.uiTitle = brand.createSpan({ cls: "cc-title", text: "Agent Sidebar" });
     const actions = header.createDiv({ cls: "cc-header-actions" });
     this.iconButton(actions, "history", "Session history", () => void this.toggleHistory());
     this.iconButton(actions, "plus", "New conversation", () => this.newConversation());
@@ -300,7 +300,7 @@ export class ChatView extends ItemView {
   private renderEmpty() {
     if (this.uiMessages.childElementCount) return;
     const empty = this.uiMessages.createDiv({ cls: "cc-empty" });
-    setIcon(empty.createDiv({ cls: "cc-empty-logo" }), "margin-agent");
+    setIcon(empty.createDiv({ cls: "cc-empty-logo" }), "agent-sidebar");
     empty.createDiv({ cls: "cc-empty-title", text: "What can I help you with?" });
     empty.createDiv({ cls: "cc-empty-sub", text: "Runs your local Claude Code in this vault, so it can read, search and edit your notes." });
     const list = empty.createDiv({ cls: "cc-starters" });
@@ -357,8 +357,8 @@ export class ChatView extends ItemView {
 
   private setTitle(text: string) {
     this.convTitle = text.replace(/\s+/g, " ").trim();
-    this.uiTitle.setText(this.convTitle ? (this.convTitle.length > 48 ? `${this.convTitle.slice(0, 48)}…` : this.convTitle) : "Margin Agent");
-    this.uiTitle.setAttr("aria-label", this.convTitle || "Margin Agent");
+    this.uiTitle.setText(this.convTitle ? (this.convTitle.length > 48 ? `${this.convTitle.slice(0, 48)}…` : this.convTitle) : "Agent Sidebar");
+    this.uiTitle.setAttr("aria-label", this.convTitle || "Agent Sidebar");
   }
 
   private nearBottom(): boolean {

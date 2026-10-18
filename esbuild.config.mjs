@@ -11,7 +11,7 @@ const deploy = {
   setup(build) {
     build.onEnd((result) => {
       if (result.errors.length || !vault) return;
-      const dir = join(vault, ".obsidian", "plugins", "margin-agent");
+      const dir = join(vault, ".obsidian", "plugins", "agent-sidebar");
       mkdirSync(dir, { recursive: true });
       for (const [from, to] of [["dist/main.js", "main.js"], ["manifest.json", "manifest.json"], ["styles.css", "styles.css"]]) {
         copyFileSync(from, join(dir, to));
@@ -44,7 +44,7 @@ const ctx = await esbuild.context({
   // The Agent SDK is ESM and calls createRequire(import.meta.url) at load time.
   define: { "import.meta.url": "__cc_import_meta_url" },
   banner: {
-    js: "var __cc_import_meta_url = typeof __filename !== 'undefined' ? require('url').pathToFileURL(__filename).href : 'file:///obsidian-margin-agent/main.js';",
+    js: "var __cc_import_meta_url = typeof __filename !== 'undefined' ? require('url').pathToFileURL(__filename).href : 'file:///obsidian-agent-sidebar/main.js';",
   },
   plugins: [eventsShim, deploy],
 });

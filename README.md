@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="assets/icon.svg" width="96" alt="Margin Agent icon">
+  <img src="assets/icon.svg" width="96" alt="Agent Sidebar icon">
 </p>
 
-<h1 align="center">Margin Agent</h1>
+<h1 align="center">Agent Sidebar</h1>
 
 <p align="center">
   Claude Code in your Obsidian sidebar. It reads, searches and edits your notes, and asks before it changes anything.
@@ -13,7 +13,7 @@
   <a href="https://github.com/vsaraikin/obsidian-claude-plugin/releases"><img src="https://img.shields.io/github/downloads/vsaraikin/obsidian-claude-plugin/total?color=7c3aed&label=downloads" alt="Downloads"></a>
   <img src="https://img.shields.io/badge/Obsidian-1.7.2%2B-7c3aed?logo=obsidian&logoColor=white" alt="Obsidian 1.7.2 or later">
   <img src="https://img.shields.io/badge/platform-desktop-555" alt="Desktop only">
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/vsaraikin/obsidian-claude-plugin?color=2563eb" alt="MIT license"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT license"></a>
 </p>
 
 <p align="center">
@@ -26,10 +26,10 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/preview-dark.png">
-  <img src="assets/preview.png" alt="Margin Agent next to a note: Claude reads two notes, proposes an edit, and adds a Risks section">
+  <img src="assets/preview.png" alt="Agent Sidebar next to a note: Claude reads two notes, proposes an edit, and adds a Risks section">
 </picture>
 
-Margin Agent runs the `claude` CLI you already have, with your vault as the working directory. The panel is modeled on the Claude Code extension for VS Code: replies stream in, each tool call gets its own row, and edits arrive as diffs you approve.
+Agent Sidebar runs the `claude` CLI you already have, with your vault as the working directory. The panel is modeled on the Claude Code extension for VS Code: replies stream in, each tool call gets its own row, and edits arrive as diffs you approve.
 
 It is an independent project, not made or endorsed by Anthropic.
 
@@ -77,11 +77,11 @@ The plugin is not in the community directory yet.
 
 **With BRAT.** Install [BRAT](https://github.com/TfTHacker/obsidian42-brat), run "BRAT: Add a beta plugin for testing" and enter `vsaraikin/obsidian-claude-plugin`. BRAT keeps it updated.
 
-**By hand.** Download `main.js`, `manifest.json` and `styles.css` from the [latest release](https://github.com/vsaraikin/obsidian-claude-plugin/releases/latest), put them in `<vault>/.obsidian/plugins/margin-agent/`, then enable Margin Agent under Settings → Community plugins.
+**By hand.** Download `main.js`, `manifest.json` and `styles.css` from the [latest release](https://github.com/vsaraikin/obsidian-claude-plugin/releases/latest), put them in `<vault>/.obsidian/plugins/agent-sidebar/`, then enable Agent Sidebar under Settings → Community plugins.
 
 ## Usage
 
-Open the panel from the ribbon or with "Margin Agent: Open chat". Other commands: New conversation, Resume last conversation, Browse conversation history, Mention current note in the prompt.
+Open the panel from the ribbon or with "Agent Sidebar: Open chat". Other commands: New conversation, Resume last conversation, Browse conversation history, Mention current note in the prompt.
 
 | Key | Action |
 | --- | --- |

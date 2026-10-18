@@ -53,7 +53,7 @@ const app = {
 };
 const plugin = {
   settings: { claudePath: "", proxy: "", model: "default", permissionMode: "default", includeActiveNote: true, showThinking: true, restoreLastConversation: false, lastSessionId: "", lastSessionTitle: "" },
-  manifest: { id: "margin-agent", version: "0.1.0" },
+  manifest: { id: "agent-sidebar", version: "0.1.0" },
   saveSettings: async () => {},
 };
 const view = new ChatView({ app }, plugin);

@@ -8,15 +8,15 @@ const ICON = `<g fill="none" stroke="currentColor" stroke-width="8" stroke-linec
 <rect x="12" y="14" width="76" height="72" rx="12"/><path d="M64 14v72"/><path d="M26 36h24M26 50h24M26 64h14"/>
 <path d="M76 34v10M76 56v10" stroke-width="7"/></g>`;
 
-export default class MarginAgentPlugin extends Plugin {
+export default class AgentSidebarPlugin extends Plugin {
   settings: ClaudeCodeSettings = { ...DEFAULT_SETTINGS };
 
   async onload() {
     await this.loadSettings();
-    addIcon("margin-agent", ICON);
+    addIcon("agent-sidebar", ICON);
 
     this.registerView(VIEW_TYPE, (leaf) => new ChatView(leaf, this));
-    this.addRibbonIcon("margin-agent", "Open Margin Agent", () => void this.activateView());
+    this.addRibbonIcon("agent-sidebar", "Open Agent Sidebar", () => void this.activateView());
     this.addSettingTab(new ClaudeCodeSettingTab(this.app, this));
 
     this.addCommand({ id: "open", name: "Open chat", callback: () => void this.activateView() });

@@ -1,6 +1,6 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
 import type { PermissionMode } from "@anthropic-ai/claude-agent-sdk";
-import type MarginAgentPlugin from "./main";
+import type AgentSidebarPlugin from "./main";
 import { findClaude, loadShellEnv } from "./env";
 
 export interface ClaudeCodeSettings {
@@ -30,7 +30,7 @@ export const DEFAULT_SETTINGS: ClaudeCodeSettings = {
 };
 
 export class ClaudeCodeSettingTab extends PluginSettingTab {
-  constructor(app: App, private plugin: MarginAgentPlugin) {
+  constructor(app: App, private plugin: AgentSidebarPlugin) {
     super(app, plugin);
   }
 

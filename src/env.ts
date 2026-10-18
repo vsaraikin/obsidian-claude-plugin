@@ -82,6 +82,6 @@ export function buildEnv(shell: Record<string, string>, proxy: string, version: 
     env.HTTP_PROXY = proxy.trim();
     env.NO_PROXY = env.NO_PROXY || "localhost,127.0.0.1";
   }
-  env.CLAUDE_AGENT_SDK_CLIENT_APP = `obsidian-margin-agent/${version}`;
+  env.CLAUDE_AGENT_SDK_CLIENT_APP = `obsidian-agent-sidebar/${version}`;
   return env;
 }
