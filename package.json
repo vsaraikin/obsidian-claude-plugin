@@ -1,6 +1,6 @@
 {
   "name": "obsidian-claude-plugin",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Obsidian sidebar chat for a local Claude Code agent",
   "scripts": {
     "dev": "node esbuild.config.mjs",

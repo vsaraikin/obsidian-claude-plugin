@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.5
+
+- Fixes styles that 0.1.4 broke while removing `!important`: question options are left aligned again, picked options and the active permission mode are highlighted again, and card buttons size to their text.
+
 ## 0.1.4
 
 - Dependencies install with a plain `npm ci` again, so the directory's source review and build verification can run.
