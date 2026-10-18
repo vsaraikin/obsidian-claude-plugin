@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- SDK messages are handled structurally */
 import {
   Component,
   FileSystemAdapter,
@@ -22,14 +21,23 @@ import {
   type PermissionResult,
   type PermissionUpdate,
   type SDKMessage,
+  type SDKPartialAssistantMessage,
+  type SDKResultMessage,
   type SDKSessionInfo,
+  type SessionMessage,
 } from "@anthropic-ai/claude-agent-sdk";
+import type { BetaMessage } from "@anthropic-ai/sdk/resources/beta/messages/messages";
 import type AgentSidebarPlugin from "./main";
 import { buildEnv, findClaude, loadShellEnv } from "./env";
 import { ClaudeSession, type UserContent } from "./session";
 import {
   EDIT_TOOLS,
   HIDDEN_TOOLS,
+  asQuestions,
+  asTodos,
+  isRecord,
+  str,
+  toInput,
   diffStats,
   formatDuration,
   relativeTime,
@@ -98,6 +106,18 @@ interface TextBlock {
   seq: number;
 }
 
+/** The usage fields that add up to the prompt size of one API request. */
+interface PromptUsage {
+  input_tokens?: number | null;
+  cache_read_input_tokens?: number | null;
+  cache_creation_input_tokens?: number | null;
+}
+
+/** Obsidian's settings modal, which the public API does not expose. */
+interface AppWithSettings {
+  setting?: { open(): void; openTabById(id: string): void };
+}
+
 interface Attachment {
   name: string;
   mediaType: string;
@@ -130,6 +150,11 @@ function sessionTitle(s: SDKSessionInfo): string {
   const raw = s.customTitle || s.summary || s.firstPrompt || "Untitled";
   const t = cleanUserText(raw.replace(/<obsidian_context>[\s\S]*?<\/obsidian_context>/g, "")) || "Untitled";
   return t.length > 90 ? `${t.slice(0, 90)}…` : t;
+}
+
+/** A stored session message, if it has the shape of an API message. */
+function asBetaMessage(v: unknown): BetaMessage | null {
+  return isRecord(v) && Array.isArray(v.content) ? (v as unknown as BetaMessage) : null;
 }
 
 function fmtTokens(n: number): string {
@@ -190,7 +215,7 @@ export class ChatView extends ItemView {
   }
 
   getDisplayText() {
-    return "Agent Sidebar";
+    return "Agent sidebar";
   }
 
   getIcon() {
@@ -238,7 +263,7 @@ export class ChatView extends ItemView {
     const header = root.createDiv({ cls: "cc-header" });
     const brand = header.createDiv({ cls: "cc-brand" });
     setIcon(brand.createSpan({ cls: "cc-logo" }), "agent-sidebar");
-    this.uiTitle = brand.createSpan({ cls: "cc-title", text: "Agent Sidebar" });
+    this.uiTitle = brand.createSpan({ cls: "cc-title", text: "Agent sidebar" });
     const actions = header.createDiv({ cls: "cc-header-actions" });
     this.iconButton(actions, "history", "Session history", () => void this.toggleHistory());
     this.iconButton(actions, "plus", "New conversation", () => this.newConversation());
@@ -357,8 +382,8 @@ export class ChatView extends ItemView {
 
   private setTitle(text: string) {
     this.convTitle = text.replace(/\s+/g, " ").trim();
-    this.uiTitle.setText(this.convTitle ? (this.convTitle.length > 48 ? `${this.convTitle.slice(0, 48)}…` : this.convTitle) : "Agent Sidebar");
-    this.uiTitle.setAttr("aria-label", this.convTitle || "Agent Sidebar");
+    this.uiTitle.setText(this.convTitle ? (this.convTitle.length > 48 ? `${this.convTitle.slice(0, 48)}…` : this.convTitle) : "Agent sidebar");
+    this.uiTitle.setAttr("aria-label", this.convTitle || "Agent sidebar");
   }
 
   private nearBottom(): boolean {
@@ -450,7 +475,7 @@ export class ChatView extends ItemView {
     const seq = ++block.seq;
     const stick = this.nearBottom();
     const comp = this.addChild(new Component());
-    const tmp = document.createElement("div");
+    const tmp = createDiv();
     await MarkdownRenderer.render(this.app, block.buf, tmp, "", comp);
     if (seq !== block.seq) {
       this.removeChild(comp);
@@ -531,15 +556,16 @@ export class ChatView extends ItemView {
       // While the permission card shows this diff, keep the row closed so the diff is not shown twice.
       if (tv.done && !tv.error) tv.item.addClass("is-open");
     } else if (name === "TodoWrite" && Array.isArray(input.todos)) {
-      renderTodos(body, input.todos as Todo[]);
-      this.updatePinnedTodos(input.todos as Todo[]);
-    } else if (name === "Bash" && input.command) {
-      if (input.description) body.createDiv({ cls: "cc-tool-desc", text: String(input.description) });
-      body.createEl("pre", { cls: "cc-pre cc-command", text: `$ ${input.command}` });
-    } else if ((name === "Task" || name === "Agent") && input.prompt) {
-      body.createDiv({ cls: "cc-tool-desc", text: String(input.prompt).slice(0, 800) });
-    } else if (name === "ExitPlanMode" && input.plan) {
-      void MarkdownRenderer.render(this.app, String(input.plan), body.createDiv({ cls: "cc-md markdown-rendered" }), "", this);
+      const todos = asTodos(input.todos);
+      renderTodos(body, todos);
+      this.updatePinnedTodos(todos);
+    } else if (name === "Bash" && str(input.command)) {
+      if (str(input.description)) body.createDiv({ cls: "cc-tool-desc", text: str(input.description) });
+      body.createEl("pre", { cls: "cc-pre cc-command", text: `$ ${str(input.command)}` });
+    } else if ((name === "Task" || name === "Agent") && str(input.prompt)) {
+      body.createDiv({ cls: "cc-tool-desc", text: str(input.prompt).slice(0, 800) });
+    } else if (name === "ExitPlanMode" && str(input.plan)) {
+      void MarkdownRenderer.render(this.app, str(input.plan), body.createDiv({ cls: "cc-md markdown-rendered" }), "", this);
     } else if (Object.keys(input).length && !summary.path) {
       body.createEl("pre", { cls: "cc-pre", text: JSON.stringify(input, null, 2) });
     }
@@ -572,8 +598,9 @@ export class ChatView extends ItemView {
 
   private onToolResults(content: unknown) {
     if (!Array.isArray(content)) return;
-    for (const block of content as Input[]) {
-      if (block?.type === "tool_result") this.completeTool(block.tool_use_id, block.content, !!block.is_error);
+    for (const raw of content as unknown[]) {
+      const block = toInput(raw);
+      if (block.type === "tool_result" && typeof block.tool_use_id === "string") this.completeTool(block.tool_use_id, block.content, block.is_error === true);
     }
   }
 
@@ -595,34 +622,32 @@ export class ChatView extends ItemView {
   // ---------------------------------------------------------------- SDK stream
 
   private onMessage(m: SDKMessage) {
-    const msg = m as any;
-    switch (msg.type) {
+    switch (m.type) {
       case "system":
-        if (msg.subtype === "init") {
-          if (msg.session_id) this.rememberSession(msg.session_id, this.convTitle);
-          this.slashCommands = msg.slash_commands ?? [];
+        if (m.subtype === "init") {
+          this.rememberSession(m.session_id, this.convTitle);
+          this.slashCommands = m.slash_commands;
           void this.loadModels();
-        } else if (msg.subtype === "compact_boundary") this.addNote("Conversation compacted");
+        } else if (m.subtype === "compact_boundary") this.addNote("Conversation compacted");
         break;
       case "stream_event":
-        this.onStream(msg);
+        this.onStream(m);
         break;
       case "assistant":
-        this.onAssistant(msg, false);
+        this.onAssistant(m.message, m.parent_tool_use_id, false, m.error);
         break;
       case "user":
-        this.onToolResults(msg.message?.content);
+        this.onToolResults(m.message.content);
         break;
       case "result":
-        this.onResult(msg);
+        this.onResult(m);
         break;
     }
   }
 
-  private onStream(m: any) {
+  private onStream(m: SDKPartialAssistantMessage) {
     if (m.parent_tool_use_id) return;
     const ev = m.event;
-    const key = `${this.currentMsgId}:${ev.index}`;
     switch (ev.type) {
       case "message_start":
         this.currentMsgId = ev.message.id;
@@ -633,13 +658,15 @@ export class ChatView extends ItemView {
         if (!this.running) this.setRunning(true);
         break;
       case "content_block_start": {
+        const key = `${this.currentMsgId}:${ev.index}`;
         const cb = ev.content_block;
         if (cb.type === "text") this.startText(key);
         else if (cb.type === "thinking" && this.plugin.settings.showThinking) this.startThinking(key);
         else if (cb.type === "tool_use" && !HIDDEN_TOOLS.has(cb.name)) this.toolView(cb.id, cb.name, {});
         break;
       }
-      case "content_block_delta":
+      case "content_block_delta": {
+        const key = `${this.currentMsgId}:${ev.index}`;
         if (ev.delta.type === "text_delta") this.appendText(key, ev.delta.text);
         else if (ev.delta.type === "thinking_delta") {
           const t = this.thinking.get(key);
@@ -649,7 +676,9 @@ export class ChatView extends ItemView {
           }
         }
         break;
+      }
       case "content_block_stop": {
+        const key = `${this.currentMsgId}:${ev.index}`;
         if (this.texts.has(key)) this.finishText(key);
         const t = this.thinking.get(key);
         if (t && !t.buf.trim()) {
@@ -659,49 +688,46 @@ export class ChatView extends ItemView {
         break;
       }
       case "message_delta":
-        if (ev.usage?.output_tokens) this.msgTokens = ev.usage.output_tokens;
+        if (ev.usage.output_tokens) this.msgTokens = ev.usage.output_tokens;
         break;
     }
   }
 
-  private onAssistant(m: any, replay: boolean) {
-    const msg = m.message;
-    if (!Array.isArray(msg?.content)) return;
-    if (m.parent_tool_use_id) {
-      const parent = this.tools.get(m.parent_tool_use_id);
+  private onAssistant(msg: BetaMessage, parentToolUseId: string | null, replay: boolean, error?: string) {
+    if (parentToolUseId) {
+      const parent = this.tools.get(parentToolUseId);
       if (!parent) return;
-      for (const b of msg.content) if (b.type === "tool_use" && !HIDDEN_TOOLS.has(b.name)) this.toolView(b.id, b.name, b.input ?? {}, parent.children);
+      for (const b of msg.content) if (b.type === "tool_use" && !HIDDEN_TOOLS.has(b.name)) this.toolView(b.id, b.name, toInput(b.input), parent.children);
       parent.item.addClass("has-body");
       return;
     }
     const streamed = !replay && this.streamedIds.has(msg.id);
-    msg.content.forEach((b: any, i: number) => {
+    msg.content.forEach((b, i) => {
       const key = `${msg.id}:full:${i}`;
-      if (b.type === "text" && !streamed && b.text?.trim()) {
+      if (b.type === "text" && !streamed && b.text.trim()) {
         this.startText(key);
         this.finishText(key, b.text);
-      } else if (b.type === "thinking" && !streamed && this.plugin.settings.showThinking && b.thinking?.trim()) {
+      } else if (b.type === "thinking" && !streamed && this.plugin.settings.showThinking && b.thinking.trim()) {
         this.startThinking(key, b.thinking);
       } else if (b.type === "tool_use" && !HIDDEN_TOOLS.has(b.name)) {
-        this.toolView(b.id, b.name, b.input ?? {});
+        this.toolView(b.id, b.name, toInput(b.input));
       }
     });
-    if (m.error && !replay) {
-      const hint =
-        m.error === "authentication_failed" ? "Claude Code is not logged in. Run `claude` in a terminal and log in, then try again." : `Claude Code reported: ${m.error}`;
+    if (error && !replay) {
+      const hint = error === "authentication_failed" ? "Claude Code is not logged in. Run `claude` in a terminal and log in, then try again." : `Claude Code reported: ${error}`;
       this.addError(hint);
     }
   }
 
-  private onResult(m: any) {
+  private onResult(m: SDKResultMessage) {
     this.pending = Math.max(0, this.pending - 1);
-    if (m.subtype !== "success") this.addError(m.errors?.join("\n") || `Claude stopped: ${m.subtype}`);
-    else if (m.is_error && m.result) this.addError(String(m.result));
+    if (m.subtype !== "success") this.addError(m.errors.join("\n") || `Claude stopped: ${m.subtype}`);
+    else if (m.is_error && m.result) this.addError(m.result);
     if (this.pending === 0) {
       if (m.subtype === "success" && !m.is_error) this.uiMessages.createDiv({ cls: "cc-done", text: `Worked for ${formatDuration(Date.now() - this.turnStart)}` });
       this.setRunning(false);
     }
-    const usage = Object.values((m.modelUsage ?? {}) as Record<string, { contextWindow?: number }>)[0];
+    const usage = Object.values(m.modelUsage)[0];
     this.updateContext(usage?.contextWindow);
   }
 
@@ -836,11 +862,11 @@ export class ChatView extends ItemView {
       if (diff?.length) renderDiff(card, diff, 200);
     } else if (toolName === "Bash") {
       title.setText("Allow Claude to run this command?");
-      card.createEl("pre", { cls: "cc-pre cc-command", text: `$ ${input.command ?? ""}` });
-      if (input.description) card.createDiv({ cls: "cc-tool-desc", text: String(input.description) });
+      card.createEl("pre", { cls: "cc-pre cc-command", text: `$ ${str(input.command)}` });
+      if (str(input.description)) card.createDiv({ cls: "cc-tool-desc", text: str(input.description) });
     } else if (toolName === "WebFetch") {
       title.setText("Allow Claude to fetch this page?");
-      card.createDiv({ cls: "cc-card-detail", text: String(input.url ?? "") });
+      card.createDiv({ cls: "cc-card-detail", text: str(input.url) });
     } else {
       title.setText(opts.title || `Allow Claude to use ${summary.verb}${summary.target ? ` on ${summary.target}` : ""}?`);
       if (Object.keys(input).length) card.createEl("pre", { cls: "cc-pre", text: JSON.stringify(input, null, 2).slice(0, 3000) });
@@ -885,7 +911,7 @@ export class ChatView extends ItemView {
     const { card, settle } = this.card("cc-plan");
     card.createDiv({ cls: "cc-card-title", text: "Ready to code? Here is Claude's plan:" });
     const md = card.createDiv({ cls: "cc-md markdown-rendered cc-plan-body" });
-    void MarkdownRenderer.render(this.app, String(input.plan ?? ""), md, "", this);
+    void MarkdownRenderer.render(this.app, str(input.plan), md, "", this);
     return new Promise((resolve) => {
       const approve = (mode: PermissionMode, label: string) => {
         if (!settle(label)) return;
@@ -910,7 +936,7 @@ export class ChatView extends ItemView {
 
   private askQuestions(input: Input, signal: AbortSignal): Promise<PermissionResult> {
     const { card, settle } = this.card("cc-question");
-    const questions: Input[] = Array.isArray(input.questions) ? input.questions : [];
+    const questions = asQuestions(input.questions);
     const answers: Record<string, string> = {};
     return new Promise((resolve) => {
       const submit = () => {
@@ -920,15 +946,15 @@ export class ChatView extends ItemView {
       const refresh = () => (submitBtn.disabled = questions.some((q) => !answers[q.question]));
       for (const q of questions) {
         const block = card.createDiv({ cls: "cc-q" });
-        if (q.header) block.createSpan({ cls: "cc-q-header", text: String(q.header) });
-        block.createDiv({ cls: "cc-card-title", text: String(q.question) });
+        if (q.header) block.createSpan({ cls: "cc-q-header", text: q.header });
+        block.createDiv({ cls: "cc-card-title", text: q.question });
         const picked = new Set<string>();
         const list = block.createDiv({ cls: "cc-options" });
         const buttons: HTMLButtonElement[] = [];
-        for (const opt of q.options ?? []) {
+        for (const opt of q.options) {
           const b = list.createEl("button", { cls: "cc-option" });
-          b.createSpan({ cls: "cc-option-label", text: String(opt.label) });
-          if (opt.description) b.createSpan({ cls: "cc-option-desc", text: String(opt.description) });
+          b.createSpan({ cls: "cc-option-label", text: opt.label });
+          if (opt.description) b.createSpan({ cls: "cc-option-desc", text: opt.description });
           buttons.push(b);
           b.onclick = () => {
             if (q.multiSelect) {
@@ -1363,7 +1389,7 @@ export class ChatView extends ItemView {
     setIcon(this.uiModelBtn.createSpan({ cls: "cc-pill-icon" }), "chevron-down");
   }
 
-  private promptTokens(usage: any): number {
+  private promptTokens(usage: PromptUsage | null | undefined): number {
     if (!usage) return 0;
     return (usage.input_tokens ?? 0) + (usage.cache_read_input_tokens ?? 0) + (usage.cache_creation_input_tokens ?? 0);
   }
@@ -1447,12 +1473,13 @@ export class ChatView extends ItemView {
     this.setTitle(title);
     this.rememberSession(id, title);
     this.clearEmpty();
-    for (const m of messages as any[]) {
+    for (const m of messages) {
       if (m.type === "assistant") {
-        this.onAssistant(m, true);
-        this.ctxTokens = this.promptTokens(m.message?.usage) || this.ctxTokens;
-      }
-      else if (m.type === "user") this.replayUser(m);
+        const msg = asBetaMessage(m.message);
+        if (!msg) continue;
+        this.onAssistant(msg, m.parent_tool_use_id, true);
+        this.ctxTokens = this.promptTokens(msg.usage) || this.ctxTokens;
+      } else if (m.type === "user") this.replayUser(m);
     }
     for (const tv of this.tools.values()) {
       tv.item.removeClass("is-running");
@@ -1463,8 +1490,8 @@ export class ChatView extends ItemView {
     this.scrollDown(true);
   }
 
-  private replayUser(m: any) {
-    const content = m.message?.content;
+  private replayUser(m: SessionMessage) {
+    const content = isRecord(m.message) ? m.message.content : undefined;
     if (m.parent_tool_use_id) {
       this.onToolResults(content);
       return;
@@ -1476,8 +1503,9 @@ export class ChatView extends ItemView {
     }
     if (!Array.isArray(content)) return;
     this.onToolResults(content);
-    const texts = content.filter((b: Input) => b.type === "text").map((b: Input) => cleanUserText(String(b.text))).filter(Boolean);
-    const images = content.filter((b: Input) => b.type === "image").length;
+    const blocks = (content as unknown[]).map(toInput);
+    const texts = blocks.filter((b) => b.type === "text").map((b) => cleanUserText(str(b.text))).filter(Boolean);
+    const images = blocks.filter((b) => b.type === "image").length;
     if (texts.length || images) this.addUser(texts.join("\n"), images ? [`${images} image${images > 1 ? "s" : ""}`] : []);
   }
 
@@ -1502,7 +1530,7 @@ export class ChatView extends ItemView {
   }
 
   private openSettings() {
-    const setting = (this.app as any).setting;
+    const setting = (this.app as unknown as AppWithSettings).setting;
     setting?.open();
     setting?.openTabById(this.plugin.manifest.id);
   }

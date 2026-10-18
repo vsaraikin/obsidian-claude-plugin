@@ -1,6 +1,6 @@
 import { addIcon, MarkdownView, Plugin } from "obsidian";
 import { detectProxy, loadShellEnv } from "./env";
-import { ClaudeCodeSettingTab, DEFAULT_SETTINGS, type ClaudeCodeSettings } from "./settings";
+import { AgentSidebarSettingTab, DEFAULT_SETTINGS, type AgentSidebarSettings } from "./settings";
 import { ChatView, VIEW_TYPE } from "./view";
 
 // A note with a margin column: text lines on the left, the agent's column on the right.
@@ -9,15 +9,15 @@ const ICON = `<g fill="none" stroke="currentColor" stroke-width="8" stroke-linec
 <path d="M76 34v10M76 56v10" stroke-width="7"/></g>`;
 
 export default class AgentSidebarPlugin extends Plugin {
-  settings: ClaudeCodeSettings = { ...DEFAULT_SETTINGS };
+  settings: AgentSidebarSettings = { ...DEFAULT_SETTINGS };
 
   async onload() {
     await this.loadSettings();
     addIcon("agent-sidebar", ICON);
 
     this.registerView(VIEW_TYPE, (leaf) => new ChatView(leaf, this));
-    this.addRibbonIcon("agent-sidebar", "Open Agent Sidebar", () => void this.activateView());
-    this.addSettingTab(new ClaudeCodeSettingTab(this.app, this));
+    this.addRibbonIcon("agent-sidebar", "Open agent sidebar", () => void this.activateView());
+    this.addSettingTab(new AgentSidebarSettingTab(this.app, this));
 
     this.addCommand({ id: "open", name: "Open chat", callback: () => void this.activateView() });
     this.addCommand({
@@ -77,7 +77,7 @@ export default class AgentSidebarPlugin extends Plugin {
   }
 
   async loadSettings() {
-    this.settings = { ...DEFAULT_SETTINGS, ...((await this.loadData()) as Partial<ClaudeCodeSettings> | null) };
+    this.settings = { ...DEFAULT_SETTINGS, ...((await this.loadData()) as Partial<AgentSidebarSettings> | null) };
   }
 
   async saveSettings() {

@@ -116,7 +116,7 @@ export class ClaudeSession {
   send(content: UserContent) {
     if (this.closed) return;
     if (!this.q) this.start();
-    this.input.push({ type: "user", message: { role: "user", content }, parent_tool_use_id: null } as SDKUserMessage);
+    this.input.push({ type: "user", message: { role: "user", content }, parent_tool_use_id: null });
   }
 
   async interrupt() {

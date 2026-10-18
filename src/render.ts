@@ -1,7 +1,14 @@
 import { homedir } from "os";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type Input = Record<string, any>;
+export type Input = Record<string, unknown>;
+
+export function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null && !Array.isArray(v);
+}
+
+export function toInput(v: unknown): Input {
+  return isRecord(v) ? v : {};
+}
 
 export interface ToolSummary {
   verb: string;
@@ -23,7 +30,7 @@ export function relPath(path: string, base: string): string {
   return path.startsWith(home + "/") ? `~${path.slice(home.length)}` : path;
 }
 
-const str = (v: unknown): string => (typeof v === "string" ? v : "");
+export const str = (v: unknown): string => (typeof v === "string" ? v : "");
 const firstLine = (s: string): string => {
   const line = s.split("\n")[0];
   return s.includes("\n") ? `${line} …` : line;
@@ -136,7 +143,8 @@ export function toolDiff(name: string, input: Input): DiffLine[] | null {
   if (name === "Write") return lineDiff("", str(input.content));
   if (name === "MultiEdit" && Array.isArray(input.edits)) {
     const out: DiffLine[] = [];
-    input.edits.forEach((e: Input, idx: number) => {
+    (input.edits as unknown[]).forEach((raw, idx) => {
+      const e = toInput(raw);
       if (idx) out.push({ kind: "…", text: "" });
       out.push(...lineDiff(str(e.old_string), str(e.new_string)));
     });
@@ -173,8 +181,11 @@ export function renderDiff(parent: HTMLElement, lines: DiffLine[], limit = 400):
 export function resultText(content: unknown): string {
   if (typeof content === "string") return content;
   if (!Array.isArray(content)) return content == null ? "" : JSON.stringify(content, null, 2);
-  return content
-    .map((block: Input) => (block?.type === "text" ? str(block.text) : block?.type === "image" ? "[image]" : ""))
+  return (content as unknown[])
+    .map((raw) => {
+      const block = toInput(raw);
+      return block.type === "text" ? str(block.text) : block.type === "image" ? "[image]" : "";
+    })
     .filter(Boolean)
     .join("\n");
 }
@@ -183,6 +194,33 @@ export interface Todo {
   content: string;
   status: "pending" | "in_progress" | "completed";
   activeForm?: string;
+}
+
+export function asTodos(v: unknown): Todo[] {
+  if (!Array.isArray(v)) return [];
+  return (v as unknown[]).filter(isRecord).map((t) => ({
+    content: str(t.content),
+    status: t.status === "completed" || t.status === "in_progress" ? t.status : "pending",
+    activeForm: str(t.activeForm) || undefined,
+  }));
+}
+
+export interface Question {
+  question: string;
+  header: string;
+  multiSelect: boolean;
+  options: { label: string; description: string }[];
+}
+
+/** The `questions` input of the AskUserQuestion tool. */
+export function asQuestions(v: unknown): Question[] {
+  if (!Array.isArray(v)) return [];
+  return (v as unknown[]).filter(isRecord).map((q) => ({
+    question: str(q.question),
+    header: str(q.header),
+    multiSelect: q.multiSelect === true,
+    options: (Array.isArray(q.options) ? (q.options as unknown[]) : []).filter(isRecord).map((o) => ({ label: str(o.label), description: str(o.description) })),
+  }));
 }
 
 export function renderTodos(parent: HTMLElement, todos: Todo[]): void {

@@ -1,9 +1,8 @@
-import { App, PluginSettingTab, Setting } from "obsidian";
+import { App, PluginSettingTab, Setting, type SettingDefinitionItem } from "obsidian";
 import type { PermissionMode } from "@anthropic-ai/claude-agent-sdk";
 import type AgentSidebarPlugin from "./main";
-import { findClaude, loadShellEnv } from "./env";
 
-export interface ClaudeCodeSettings {
+export interface AgentSidebarSettings {
   claudePath: string;
   proxy: string;
   proxyDetected: boolean;
@@ -16,7 +15,7 @@ export interface ClaudeCodeSettings {
   lastSessionTitle: string;
 }
 
-export const DEFAULT_SETTINGS: ClaudeCodeSettings = {
+export const DEFAULT_SETTINGS: AgentSidebarSettings = {
   claudePath: "",
   proxy: "",
   proxyDetected: false,
@@ -29,97 +28,83 @@ export const DEFAULT_SETTINGS: ClaudeCodeSettings = {
   lastSessionTitle: "",
 };
 
-export class ClaudeCodeSettingTab extends PluginSettingTab {
-  constructor(app: App, private plugin: AgentSidebarPlugin) {
+const MODEL_OPTIONS = { default: "Default (recommended)", opus: "Opus", sonnet: "Sonnet", haiku: "Haiku" };
+const MODE_OPTIONS = { default: "Ask before edits", acceptEdits: "Edit automatically", plan: "Plan mode", auto: "Auto mode" };
+
+type SettingKey = keyof AgentSidebarSettings;
+
+const asText = (v: unknown): string => (typeof v === "string" ? v : "");
+
+export class AgentSidebarSettingTab extends PluginSettingTab {
+  constructor(
+    app: App,
+    private plugin: AgentSidebarPlugin,
+  ) {
     super(app, plugin);
   }
 
+  getSettingDefinitions(): SettingDefinitionItem<SettingKey>[] {
+    return [
+      {
+        name: "Claude executable",
+        desc: "Path to the Claude CLI binary. Leave it empty to look it up through your login shell.",
+        control: { type: "text", key: "claudePath", placeholder: "Found automatically" },
+      },
+      {
+        name: "HTTPS proxy",
+        desc: "Passed to the Claude CLI for HTTPS and HTTP requests. Copied from your shell on first run.",
+        control: { type: "text", key: "proxy", placeholder: "Proxy address" },
+      },
+      { name: "Default model", control: { type: "dropdown", key: "model", options: MODEL_OPTIONS } },
+      {
+        name: "Default permission mode",
+        desc: "Mode a new conversation starts in. Shift+Tab in the prompt box switches it.",
+        control: { type: "dropdown", key: "permissionMode", options: MODE_OPTIONS },
+      },
+      {
+        name: "Share the open note",
+        desc: "Tell Claude which note is open and pass the selected text with each message.",
+        control: { type: "toggle", key: "includeActiveNote" },
+      },
+      {
+        name: "Reopen last conversation",
+        desc: "When Obsidian starts, the panel continues the conversation that was open in it.",
+        control: { type: "toggle", key: "restoreLastConversation" },
+      },
+      {
+        name: "Show thinking",
+        desc: "Show summarized reasoning as collapsed blocks. Applies to new conversations.",
+        control: { type: "toggle", key: "showThinking" },
+      },
+    ];
+  }
+
+  /** Obsidian before 1.13 does not read getSettingDefinitions(), so draw the same settings by hand. */
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
-    const s = this.plugin.settings;
-    const save = () => this.plugin.saveSettings();
-
-    const pathSetting = new Setting(containerEl)
-      .setName("Claude Code executable")
-      .setDesc("Path to the claude binary. Leave empty to find it on your login shell PATH.")
-      .addText((t) =>
-        t.setValue(s.claudePath).onChange(async (v) => {
-          s.claudePath = v.trim();
-          await save();
-        }),
-      );
-    void loadShellEnv().then((env) => {
-      const found = findClaude(env, "");
-      pathSetting.controlEl.querySelector("input")?.setAttribute("placeholder", found ?? "not found on PATH");
-    });
-
-    new Setting(containerEl)
-      .setName("HTTPS proxy")
-      .setDesc("Sent to Claude Code as HTTPS_PROXY and HTTP_PROXY. Filled in from your shell on first run.")
-      .addText((t) =>
-        t
-          .setPlaceholder("http://host:port")
-          .setValue(s.proxy)
-          .onChange(async (v) => {
-            s.proxy = v.trim();
-            await save();
-          }),
-      );
-
-    new Setting(containerEl)
-      .setName("Default model")
-      .addDropdown((d) =>
-        d
-          .addOptions({ default: "Default (recommended)", opus: "Opus", sonnet: "Sonnet", haiku: "Haiku" })
-          .setValue(s.model)
-          .onChange(async (v) => {
-            s.model = v;
-            await save();
-          }),
-      );
-
-    new Setting(containerEl)
-      .setName("Default permission mode")
-      .setDesc("Mode a new conversation starts in. Shift+Tab in the prompt box switches it.")
-      .addDropdown((d) =>
-        d
-          .addOptions({ default: "Ask before edits", acceptEdits: "Edit automatically", plan: "Plan mode", auto: "Auto mode" })
-          .setValue(s.permissionMode)
-          .onChange(async (v) => {
-            s.permissionMode = v as PermissionMode;
-            await save();
-          }),
-      );
-
-    new Setting(containerEl)
-      .setName("Share the open note")
-      .setDesc("Tell Claude which note is open and pass the selected text with each message.")
-      .addToggle((t) =>
-        t.setValue(s.includeActiveNote).onChange(async (v) => {
-          s.includeActiveNote = v;
-          await save();
-        }),
-      );
-
-    new Setting(containerEl)
-      .setName("Reopen last conversation")
-      .setDesc("When Obsidian starts, the panel continues the conversation that was open in it.")
-      .addToggle((t) =>
-        t.setValue(s.restoreLastConversation).onChange(async (v) => {
-          s.restoreLastConversation = v;
-          await save();
-        }),
-      );
-
-    new Setting(containerEl)
-      .setName("Show thinking")
-      .setDesc("Show summarized reasoning as collapsed blocks. Applies to new conversations.")
-      .addToggle((t) =>
-        t.setValue(s.showThinking).onChange(async (v) => {
-          s.showThinking = v;
-          await save();
-        }),
-      );
+    const settings = this.plugin.settings as unknown as Record<SettingKey, unknown>;
+    const save = async (key: SettingKey, value: unknown) => {
+      settings[key] = value;
+      await this.plugin.saveSettings();
+    };
+    for (const def of this.getSettingDefinitions()) {
+      if (!("control" in def) || !def.control) continue;
+      const setting = new Setting(containerEl).setName(def.name);
+      if (def.desc) setting.setDesc(def.desc);
+      const control = def.control;
+      if (control.type === "toggle") {
+        setting.addToggle((t) => t.setValue(settings[control.key] === true).onChange((v) => save(control.key, v)));
+      } else if (control.type === "dropdown") {
+        setting.addDropdown((d) => d.addOptions(control.options).setValue(asText(settings[control.key])).onChange((v) => save(control.key, v)));
+      } else if (control.type === "text") {
+        setting.addText((t) =>
+          t
+            .setPlaceholder(control.placeholder ?? "")
+            .setValue(asText(settings[control.key]))
+            .onChange((v) => save(control.key, v.trim())),
+        );
+      }
+    }
   }
 }
