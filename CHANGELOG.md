@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.4
+
+- Dependencies install with a plain `npm ci` again, so the directory's source review and build verification can run.
+- Release assets come with GitHub build provenance attestations.
+- Styles no longer use `!important`.
+- The README describes in more detail what the plugin reads outside the vault.
+
 ## 0.1.3
 
 - Settings use Obsidian's declarative settings API on 1.13 and later, so they show up in settings search. Older versions get the same settings drawn by hand.

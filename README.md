@@ -110,11 +110,11 @@ The plugin starts your installed `claude` binary through the [Claude Agent SDK](
 
 ## Network, accounts and data
 
-The plugin makes no network requests of its own and has no telemetry. Claude Code sends your prompts to Anthropic's API, or to the provider you set up in Claude Code. That includes the open note's path, the selected text, and whatever files and command output Claude reads while working.
+The plugin makes no network requests of its own and has no telemetry. The bundled Claude Agent SDK contains network code, but the plugin only uses the SDK to start and talk to the local `claude` process. The clipboard is read when you paste an image into the prompt and written when you choose "Copy resume command". Claude Code sends your prompts to Anthropic's API, or to the provider you set up in Claude Code. That includes the open note's path, the selected text, and whatever files and command output Claude reads while working.
 
 You need a Claude account or an Anthropic API key, configured in Claude Code. Usage is billed by Anthropic under your own plan, and the plugin never sees your credentials. Anthropic asks third-party tools built on the Agent SDK to use API key authentication; see their [legal and compliance page](https://code.claude.com/docs/en/legal-and-compliance) before using a subscription login here.
 
-Outside the vault, the plugin reads Claude Code's session files in `~/.claude/projects` and your login shell's environment. Claude Code itself works in the vault folder, but its tools can reach other paths; it follows your Claude Code permission settings and asks in the panel before edits and most commands.
+Outside the vault, the plugin reads Claude Code's session files in `~/.claude/projects`, checks the usual install folders for the `claude` binary, and runs your login shell once to read `PATH` and proxy variables. It passes your environment to Claude Code so the CLI finds its tools and login. Claude Code itself works in the vault folder, but its tools can reach other paths; it follows your Claude Code permission settings and asks in the panel before edits and most commands.
 
 ## Development
 

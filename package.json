@@ -1,6 +1,6 @@
 {
   "name": "obsidian-claude-plugin",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Obsidian sidebar chat for a local Claude Code agent",
   "scripts": {
     "dev": "node esbuild.config.mjs",
@@ -21,7 +21,6 @@
     "@eslint/js": "^9.39.5",
     "@eslint/json": "^0.14.0",
     "@types/node": "^26.6.5",
-    "builtin-modules": "^5.4.0",
     "esbuild": "^0.28.2",
     "eslint": "^9.39.5",
     "eslint-plugin-obsidianmd": "^0.4.2",
@@ -34,5 +33,10 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/vsaraikin/obsidian-claude-plugin.git"
+  },
+  "overrides": {
+    "eslint-plugin-obsidianmd": {
+      "obsidian": "$obsidian"
+    }
   }
 }

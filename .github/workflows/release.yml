@@ -7,6 +7,8 @@ on:
 
 permissions:
   contents: write
+  id-token: write
+  attestations: write
 
 jobs:
   release:
@@ -19,7 +21,7 @@ jobs:
           node-version: 22
           cache: npm
 
-      - run: npm ci --legacy-peer-deps
+      - run: npm ci
 
       - run: npm run lint
 
@@ -29,6 +31,14 @@ jobs:
       - run: npm run build
 
       - run: npm run test:view
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            dist/main.js
+            manifest.json
+            styles.css
 
       - name: Create release
         env:
