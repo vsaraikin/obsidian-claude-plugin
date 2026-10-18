@@ -24,10 +24,9 @@
   <a href="#network-accounts-and-data">Privacy</a>
 </p>
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/preview-dark.png">
-  <img src="assets/preview.png" alt="Agent Sidebar next to a note: Claude reads two notes, proposes an edit, and adds a Risks section">
-</picture>
+<p align="center">
+  <img src="assets/demo.gif" alt="Agent Sidebar demo: Claude reads the note and the kickoff notes, shows the edit as a diff, the edit is approved, and the note gets a Risks section">
+</p>
 
 Agent Sidebar runs the `claude` CLI you already have, with your vault as the working directory. The panel is modeled on the Claude Code extension for VS Code: replies stream in, each tool call gets its own row, and edits arrive as diffs you approve.
 
